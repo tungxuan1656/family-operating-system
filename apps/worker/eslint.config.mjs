@@ -134,7 +134,11 @@ export default defineConfig([
         { blankLine: 'always', prev: 'multiline-expression', next: '*' },
         { blankLine: 'always', prev: '*', next: 'multiline-expression' },
         { blankLine: 'always', prev: '*', next: ['const', 'let', 'var'] },
-        { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+        {
+          blankLine: 'any',
+          prev: ['const', 'let', 'var'],
+          next: ['const', 'let', 'var'],
+        },
         { blankLine: 'always', prev: '*', next: 'return' },
       ],
 
@@ -150,7 +154,7 @@ export default defineConfig([
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: './tsconfig.app.json',
+        project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
         sourceType: 'module',
       },

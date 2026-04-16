@@ -28,6 +28,7 @@
 ## Review Comment Standard
 
 Each finding should include:
+
 - precise location (`file:line`)
 - current behavior and risk
 - practical fix direction

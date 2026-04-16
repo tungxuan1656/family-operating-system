@@ -32,7 +32,10 @@ import {
 import { Input } from '@/components/ui/input'
 
 const formSchema = z.object({
-  title: z.string().min(3, 'Minimum 3 characters').max(50, 'Maximum 50 characters'),
+  title: z
+    .string()
+    .min(3, 'Minimum 3 characters')
+    .max(50, 'Maximum 50 characters'),
   description: z.string().min(10, 'Minimum 10 characters'),
 })
 
@@ -85,7 +88,9 @@ export function ExampleForm(): React.JSX.Element {
                 aria-invalid={fieldState.invalid}
                 placeholder='Enter description'
               />
-              <FieldDescription>This information will be displayed to users.</FieldDescription>
+              <FieldDescription>
+                This information will be displayed to users.
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

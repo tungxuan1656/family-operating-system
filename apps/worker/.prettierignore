@@ -8,3 +8,4 @@
 .agent/**
 .github/**
 .vscode/**
+worker-configuration.d.ts

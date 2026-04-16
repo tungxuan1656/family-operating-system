@@ -108,7 +108,6 @@ Strings with quantities, units, or dynamic values must use interpolation — do 
 ```tsx
 // ✅ Correct
 t('shifts.stats.totalDrivers', { count: totalDrivers })
-
 // ❌ Wrong
 `/ ${totalDrivers} Total`
 ```

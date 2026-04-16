@@ -11,7 +11,9 @@
     "lint:worker": "pnpm --filter worker lint",
     "typecheck:web": "pnpm --filter web typecheck",
     "test:worker": "pnpm --filter worker exec vitest run",
-    "deploy:worker": "pnpm --filter worker deploy"
+    "deploy:worker": "pnpm --filter worker deploy",
+    "lint": "pnpm --filter web lint && pnpm --filter worker lint",
+    "typecheck": "pnpm --filter web typecheck && pnpm --filter worker typecheck"
   }
 }
 

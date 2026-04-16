@@ -42,6 +42,7 @@ export * from './goal-form'
 ```
 
 **Distinguishing public vs internal:**
+
 - **Public**: components used outside the folder → include in `index.ts`.
 - **Internal**: components only used within the folder (sub-components of a larger component) → **not** included in `index.ts`, kept as module-private.
 

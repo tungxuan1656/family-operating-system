@@ -60,14 +60,19 @@ import { client } from './client'
 import { API_ENDPOINTS } from './endpoints'
 
 export const getExamples = async (): Promise<ApiResponse<ExampleDTO[]>> => {
-  const response = await client.get<ApiResponse<ExampleDTO[]>>(API_ENDPOINTS.examples.list)
+  const response = await client.get<ApiResponse<ExampleDTO[]>>(
+    API_ENDPOINTS.examples.list,
+  )
   return response.data
 }
 
 export const createExample = async (
   payload: CreateExampleRequest,
 ): Promise<ApiResponse<ExampleDTO>> => {
-  const response = await client.post<ApiResponse<ExampleDTO>>(API_ENDPOINTS.examples.list, payload)
+  const response = await client.post<ApiResponse<ExampleDTO>>(
+    API_ENDPOINTS.examples.list,
+    payload,
+  )
   return response.data
 }
 ```

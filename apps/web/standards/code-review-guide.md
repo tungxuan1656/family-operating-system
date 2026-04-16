@@ -82,17 +82,27 @@ Action:
 ### P02b. PR Mode CLI Protocol (Mandatory When Reviewing a PR)
 
 1. Resolve target PR:
+
 - if PR number is unknown: `gh pr list --state open`
 - if PR number is known: `gh pr view <PR_NUMBER>`
+
 2. Capture PR metadata:
+
 - `gh pr view <PR_NUMBER> --json number,title,baseRefName,headRefName,baseRefOid,headRefOid,changedFiles,additions,deletions`
+
 3. Capture changed files:
+
 - `gh pr diff <PR_NUMBER> --name-only`
+
 4. Read changed files in full (not only hunks), at PR head snapshot.
 5. Read relevant context files:
+
 - imported modules, related tests, and call-sites/usages.
+
 6. Build impact map:
+
 - where changed functions/hooks/selectors are used and what behavior can regress.
+
 7. Then execute P03 -> P09 normally.
 
 ### P02c. Historical Recurrence Gate (Mandatory)
@@ -395,16 +405,19 @@ Template:
 ## Review Summary
 
 ### Scope
+
 - PR mode: Full (mandatory)
 - Flows reviewed: <list>
 - Rule groups reviewed: <Auto, A-M>
 
 ### Findings
+
 - Critical: <count>
 - Major: <count>
 - Minor: <count>
 
 ### Evidence (sample)
+
 | Item                           | Status | Evidence          | Severity if fail |
 | ------------------------------ | ------ | ----------------- | ---------------- |
 | B-06 Form payload completeness | PASS   | src/...:120       | Critical         |
@@ -412,12 +425,14 @@ Template:
 | G-02 Bugfix regression test    | PASS   | src/...test.ts:42 | Critical         |
 
 ### Previous Findings Closure (follow-up reviews only)
+
 | Previous finding                | Closure status | Evidence           |
 | ------------------------------- | -------------- | ------------------ |
 | PR-xx #1 Auth token dual source | Fixed          | src/...:45         |
 | PR-xx #2 Missing tests          | Still Open     | (no new test file) |
 
 ### Merge Decision
+
 - Decision: Merge | Block
 - Remaining risks: <none/details>
 ```

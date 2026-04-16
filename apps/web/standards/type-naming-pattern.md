@@ -39,7 +39,10 @@ export type GoalHistoryResponse = {
 export const updateMe = async (
   payload: UpdateMeRequest,
 ): Promise<ApiResponse<UserDTO>> => {
-  const response = await client.patch<ApiResponse<UserDTO>>(API_ENDPOINTS.users.me, payload)
+  const response = await client.patch<ApiResponse<UserDTO>>(
+    API_ENDPOINTS.users.me,
+    payload,
+  )
   return response.data
 }
 ```

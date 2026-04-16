@@ -20,14 +20,11 @@ const initialState: ExampleState = {
 
 const _useExampleStore = create<ExampleState>()(
   devtools(
-    persist(
-      () => initialState,
-      {
-        name: 'example-storage',
-        storage: createJSONStorage(() => localStorage),
-        partialize: (s) => ({ data: s.data }), // persist only required fields
-      },
-    ),
+    persist(() => initialState, {
+      name: 'example-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({ data: s.data }), // persist only required fields
+    }),
   ),
 )
 

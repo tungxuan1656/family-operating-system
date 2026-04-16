@@ -31,7 +31,11 @@ export type ConfirmDeleteModalRef = {
   open: (options: { itemName: string; onConfirm: () => void }) => void
 }
 
-export const ConfirmDeleteModal = ({ ref }: { ref?: Ref<ConfirmDeleteModalRef> }) => {
+export const ConfirmDeleteModal = ({
+  ref,
+}: {
+  ref?: Ref<ConfirmDeleteModalRef>
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [itemName, setItemName] = useState('')
   const onConfirmCallback = useRef<(() => void) | null>(null)
@@ -94,14 +98,28 @@ Use `FieldGroup` > `Field` > `FieldLabel` + control. `FieldError` displays valid
 ```tsx
 // components/shared/edit-profile-modal.tsx
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter, DialogClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldError,
+} from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export const EditProfileModal = ({ ref }: { ref?: Ref<EditProfileModalRef> }) => {
+export const EditProfileModal = ({
+  ref,
+}: {
+  ref?: Ref<EditProfileModalRef>
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [error, setError] = useState('')
@@ -146,7 +164,13 @@ Use `FieldGroup` + `Field` directly in page/section.
 
 ```tsx
 // pages/settings/profile-section.tsx
-import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+} from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -176,9 +200,9 @@ const ProfileSection = () => (
 
 ## When to Use FieldLegend vs FieldLabel
 
-| Component | HTML | Use When |
-|---|---|---|
-| `FieldLabel` | `<label>` | Field has **1 clear control** (Input, Select, Textarea). Linked via `htmlFor`. |
+| Component     | HTML       | Use When                                                                                                                                                        |
+| ------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FieldLabel`  | `<label>`  | Field has **1 clear control** (Input, Select, Textarea). Linked via `htmlFor`.                                                                                  |
 | `FieldLegend` | `<legend>` | Field is a **group** of multiple related controls on multiple lines (single line still uses `FieldLabel`) or when explicitly requested. Does not use `htmlFor`. |
 
 ```tsx

@@ -15,5 +15,6 @@ Official frontend standards and review references:
 - `code-review-guide.md`
 
 Review helper scripts:
+
 - `frontend/scripts/review/review-check.sh`
 - `frontend/scripts/review/get-pr-comments.sh`
