@@ -1,0 +1,32 @@
+{
+	"name": "worker",
+	"version": "0.0.0",
+	"private": true,
+	"packageManager": "pnpm@10.12.1",
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"lint": "eslint .",
+		"start": "wrangler dev",
+		"test": "vitest",
+		"cf-typegen": "wrangler types"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@types/node": "^25.6.0",
+		"eslint": "^9.39.4",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-prettier": "^5.5.5",
+		"eslint-plugin-react": "^7.37.5",
+		"eslint-plugin-react-compiler": "19.1.0-rc.2",
+		"eslint-plugin-react-hooks": "^7.0.1",
+		"eslint-plugin-react-refresh": "^0.5.2",
+		"eslint-plugin-simple-import-sort": "^13.0.0",
+		"eslint-plugin-unicorn": "^64.0.0",
+		"eslint-plugin-unused-imports": "^4.4.1",
+		"typescript": "^5.5.2",
+		"typescript-eslint": "^8.58.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.83.0"
+	}
+}

@@ -1,0 +1,17 @@
+{
+  "name": "family-operating-system",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:worker": "pnpm --filter worker dev",
+    "build:web": "pnpm --filter web build",
+    "lint:web": "pnpm --filter web lint",
+    "lint:worker": "pnpm --filter worker lint",
+    "typecheck:web": "pnpm --filter web typecheck",
+    "test:worker": "pnpm --filter worker exec vitest run",
+    "deploy:worker": "pnpm --filter worker deploy"
+  }
+}
+
