@@ -1,7 +1,7 @@
 import { createRemoteJWKSet, type JWTPayload, jwtVerify } from 'jose'
 
+import { type AppConfig } from '@/dto'
 import { unauthenticated } from '@/lib/errors'
-import type { AppConfig } from '@/lib/types'
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 

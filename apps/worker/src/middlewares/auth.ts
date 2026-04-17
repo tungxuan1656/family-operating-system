@@ -4,10 +4,10 @@ import {
   findSessionById,
   isSessionActive,
 } from '@/db/repositories/session-repository'
+import type { AppBindings } from '@/dto'
 import { readConfig } from '@/lib/env'
 import { unauthenticated } from '@/lib/errors'
-import type { AppBindings } from '@/lib/types'
-import { verifyAccessToken } from '@/utils/jwt'
+import { verifyAccessToken } from '@/utils/auth/jwt'
 
 const getBearerToken = (authorizationHeader: string | undefined): string => {
   if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {

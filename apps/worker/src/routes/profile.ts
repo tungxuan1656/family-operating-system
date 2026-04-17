@@ -1,36 +1,19 @@
 import { Hono } from 'hono'
-import { z } from 'zod'
+import type { ZodSchema } from 'zod'
 
 import {
   loadUserById,
   updateUserProfile,
 } from '@/db/repositories/user-repository'
+import type { AppBindings, ProfileResponse, UpdateProfileRequest } from '@/dto'
+import { updateProfileRequestSchema } from '@/dto'
 import { invalidInput } from '@/lib/errors'
 import { success } from '@/lib/response'
-import type { AppBindings } from '@/lib/types'
 import { authMiddleware } from '@/middlewares/auth'
-
-const updateProfileSchema = z
-  .object({
-    displayName: z
-      .string()
-      .trim()
-      .min(1, 'Display name must not be blank.')
-      .nullable()
-      .optional(),
-    avatarUrl: z.url().nullable().optional(),
-  })
-  .strict()
-  .refine(
-    (value) => value.displayName !== undefined || value.avatarUrl !== undefined,
-    {
-      message: 'At least one profile field must be provided.',
-    },
-  )
 
 const readJsonBody = async <T>(
   request: Request,
-  schema: z.ZodSchema<T>,
+  schema: ZodSchema<T>,
 ): Promise<T> => {
   let rawBody: unknown
 
@@ -52,7 +35,9 @@ const readJsonBody = async <T>(
   return parsed.data
 }
 
-const toProfileResponse = (user: Awaited<ReturnType<typeof loadUserById>>) => ({
+const toProfileResponse = (
+  user: Awaited<ReturnType<typeof loadUserById>>,
+): ProfileResponse => ({
   id: user.id,
   email: user.primaryEmail,
   displayName: user.displayName,
@@ -72,7 +57,10 @@ profileRoutes.get('/profile', async (ctx) => {
 
 profileRoutes.patch('/profile', async (ctx) => {
   const currentUser = ctx.get('currentUser')
-  const body = await readJsonBody(ctx.req.raw, updateProfileSchema)
+  const body = await readJsonBody<UpdateProfileRequest>(
+    ctx.req.raw,
+    updateProfileRequestSchema,
+  )
   await loadUserById(ctx.env.DB, currentUser.id)
 
   const updatedProfile = await updateUserProfile(ctx.env.DB, currentUser.id, {

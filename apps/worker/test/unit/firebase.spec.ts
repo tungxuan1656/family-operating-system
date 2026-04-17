@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { AppError } from '@/lib/errors'
-import { verifyFirebaseIdToken } from '@/utils/firebase'
+import { verifyFirebaseIdToken } from '@/utils/auth/firebase'
 
 const baseConfig = {
   authIssuer: 'https://fos.local',
