@@ -31,17 +31,13 @@ describe('firebase token verification', () => {
     expect(payload.emailVerified).toBe(true)
   })
 
-  it('accepts unsafe test token for local project id', async () => {
-    const payload = await verifyFirebaseIdToken(
-      'test:user-2:user2@example.com',
-      {
+  it('rejects unsafe test token when allow flag is disabled, even in local project', async () => {
+    await expect(
+      verifyFirebaseIdToken('test:user-2:user2@example.com', {
         ...baseConfig,
         firebaseProjectId: 'fos-local',
-      },
-    )
-
-    expect(payload.sub).toBe('user-2')
-    expect(payload.email).toBe('user2@example.com')
+      }),
+    ).rejects.toBeInstanceOf(AppError)
   })
 
   it('rejects invalid token when unsafe tokens are disabled', async () => {

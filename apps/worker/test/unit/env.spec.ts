@@ -33,7 +33,7 @@ describe('env config', () => {
     )
   })
 
-  it('throws INVALID_INPUT when required value is missing', () => {
+  it('throws INTERNAL_ERROR when required value is missing', () => {
     expect(() =>
       readConfig(
         createEnv({
@@ -49,25 +49,33 @@ describe('env config', () => {
         }),
       )
     } catch (error) {
-      expect((error as AppError).code).toBe('INVALID_INPUT')
+      expect((error as AppError).code).toBe('INTERNAL_ERROR')
     }
   })
 
-  it('throws INVALID_INPUT when token TTL is invalid', () => {
+  it('throws INTERNAL_ERROR when token TTL is invalid', () => {
     expect(() =>
       readConfig(
         createEnv({
           ACCESS_TOKEN_TTL_SECONDS: '0',
         }),
       ),
-    ).toThrow(AppError)
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'INTERNAL_ERROR',
+      }),
+    )
   })
 
-  it('throws INVALID_INPUT when D1 binding is missing', () => {
+  it('throws INTERNAL_ERROR when D1 binding is missing', () => {
     expect(() =>
       assertDatabaseBinding({
         DB: undefined,
       } as unknown as Env),
-    ).toThrow(AppError)
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'INTERNAL_ERROR',
+      }),
+    )
   })
 })

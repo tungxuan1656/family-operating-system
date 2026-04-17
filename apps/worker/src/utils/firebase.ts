@@ -64,10 +64,7 @@ export const verifyFirebaseIdToken = async (
   idToken: string,
   config: AppConfig,
 ) => {
-  if (
-    config.allowInsecureTestTokens ||
-    config.firebaseProjectId === 'fos-local'
-  ) {
+  if (config.allowInsecureTestTokens) {
     const parsed = parseUnsafeTestToken(idToken)
 
     if (parsed) {

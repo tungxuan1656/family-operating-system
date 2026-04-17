@@ -26,10 +26,10 @@ const toStoredUser = (row: {
   avatarUrl: row.avatar_url,
 })
 
-export const upsertUserByFirebaseIdentity = async (
+const findIdentityUserId = async (
   db: D1Database,
-  identity: FirebaseIdentityInput,
-): Promise<StoredUser> => {
+  subject: string,
+): Promise<string | null> => {
   const existingIdentity = await db
     .prepare(
       `SELECT user_id
@@ -37,78 +37,17 @@ export const upsertUserByFirebaseIdentity = async (
        WHERE provider = ? AND provider_subject = ?
        LIMIT 1`,
     )
-    .bind('firebase', identity.subject)
+    .bind('firebase', subject)
     .first<{ user_id: string }>()
 
-  const nowEpoch = Date.now()
+  return existingIdentity?.user_id ?? null
+}
 
-  if (existingIdentity) {
-    await db
-      .prepare(
-        `UPDATE users
-         SET display_name = ?, primary_email = ?, avatar_url = ?, updated_at = ?
-         WHERE id = ?`,
-      )
-      .bind(
-        identity.name,
-        identity.email,
-        identity.picture,
-        nowEpoch,
-        existingIdentity.user_id,
-      )
-      .run()
-
-    await db
-      .prepare(
-        `UPDATE auth_identities
-         SET provider_email = ?, last_login_at = ?, updated_at = ?
-         WHERE provider = ? AND provider_subject = ?`,
-      )
-      .bind(identity.email, nowEpoch, nowEpoch, 'firebase', identity.subject)
-      .run()
-
-    const updated = await db
-      .prepare(
-        `SELECT id, display_name, primary_email, avatar_url
-         FROM users
-         WHERE id = ?
-         LIMIT 1`,
-      )
-      .bind(existingIdentity.user_id)
-      .first<{
-        id: string
-        display_name: string | null
-        primary_email: string | null
-        avatar_url: string | null
-      }>()
-
-    if (!updated) {
-      throw new Error('User upsert failed unexpectedly')
-    }
-
-    return toStoredUser(updated)
-  }
-
-  const userId = newId()
-  const identityId = newId()
-
-  await db
-    .prepare(
-      `INSERT INTO users (id, display_name, primary_email, avatar_url)
-       VALUES (?, ?, ?, ?)`,
-    )
-    .bind(userId, identity.name, identity.email, identity.picture)
-    .run()
-
-  await db
-    .prepare(
-      `INSERT INTO auth_identities (id, user_id, provider, provider_subject, provider_email)
-       VALUES (?, ?, ?, ?, ?)`,
-    )
-    .bind(identityId, userId, 'firebase', identity.subject, identity.email)
-    .run()
-
-  const created = await db
+const loadUserById = async (
+  db: D1Database,
+  userId: string,
+): Promise<StoredUser> => {
+  const user = await db
     .prepare(
       `SELECT id, display_name, primary_email, avatar_url
        FROM users
@@ -123,9 +62,103 @@ export const upsertUserByFirebaseIdentity = async (
       avatar_url: string | null
     }>()
 
-  if (!created) {
-    throw new Error('User creation failed unexpectedly')
+  if (!user) {
+    throw new Error('User upsert failed unexpectedly')
   }
 
-  return toStoredUser(created)
+  return toStoredUser(user)
+}
+
+const updateIdentityUser = async (
+  db: D1Database,
+  userId: string,
+  identity: FirebaseIdentityInput,
+  nowEpoch: number,
+): Promise<StoredUser> => {
+  await db
+    .prepare(
+      `UPDATE users
+       SET display_name = ?, primary_email = ?, avatar_url = ?, updated_at = ?
+       WHERE id = ?`,
+    )
+    .bind(identity.name, identity.email, identity.picture, nowEpoch, userId)
+    .run()
+
+  await db
+    .prepare(
+      `UPDATE auth_identities
+       SET provider_email = ?, last_login_at = ?, updated_at = ?
+       WHERE provider = ? AND provider_subject = ?`,
+    )
+    .bind(identity.email, nowEpoch, nowEpoch, 'firebase', identity.subject)
+    .run()
+
+  return loadUserById(db, userId)
+}
+
+const isProviderSubjectConflictError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  return /UNIQUE constraint failed: auth_identities\.provider, auth_identities\.provider_subject/i.test(
+    error.message,
+  )
+}
+
+export const upsertUserByFirebaseIdentity = async (
+  db: D1Database,
+  identity: FirebaseIdentityInput,
+): Promise<StoredUser> => {
+  const existingIdentityUserId = await findIdentityUserId(db, identity.subject)
+  const nowEpoch = Date.now()
+
+  if (existingIdentityUserId) {
+    return updateIdentityUser(db, existingIdentityUserId, identity, nowEpoch)
+  }
+
+  const userId = newId()
+  const identityId = newId()
+
+  await db
+    .prepare(
+      `INSERT INTO users (id, display_name, primary_email, avatar_url)
+       VALUES (?, ?, ?, ?)`,
+    )
+    .bind(userId, identity.name, identity.email, identity.picture)
+    .run()
+
+  try {
+    await db
+      .prepare(
+        `INSERT INTO auth_identities (id, user_id, provider, provider_subject, provider_email)
+         VALUES (?, ?, ?, ?, ?)`,
+      )
+      .bind(identityId, userId, 'firebase', identity.subject, identity.email)
+      .run()
+  } catch (error) {
+    if (!isProviderSubjectConflictError(error)) {
+      throw error
+    }
+
+    // Another request won the identity insert race. Remove the temporary user
+    // created by this request to avoid orphan records, then continue on winner.
+    await db
+      .prepare(
+        `DELETE FROM users
+         WHERE id = ?`,
+      )
+      .bind(userId)
+      .run()
+
+    const racedUserId = await findIdentityUserId(db, identity.subject)
+
+    if (!racedUserId) {
+      throw error
+    }
+
+    return updateIdentityUser(db, racedUserId, identity, nowEpoch)
+  }
+
+  return loadUserById(db, userId)
 }

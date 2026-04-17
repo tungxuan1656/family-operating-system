@@ -1,4 +1,4 @@
-import { invalidInput } from '@/lib/errors'
+import { internalError } from '@/lib/errors'
 import type { AppConfig } from '@/lib/types'
 
 const DEFAULT_FIREBASE_JWKS_URL =
@@ -7,11 +7,14 @@ const DEFAULT_FIREBASE_JWKS_URL =
 const toBoolean = (value: string | undefined): boolean =>
   value?.toLowerCase() === 'true'
 
-const toPositiveInteger = (name: string, value: string | undefined): number => {
+const envConfigError = (): ReturnType<typeof internalError> =>
+  internalError('Worker configuration is invalid.')
+
+const toPositiveInteger = (value: string | undefined): number => {
   const parsed = Number(value)
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw invalidInput(`Invalid ${name}. Must be a positive integer.`)
+    throw envConfigError()
   }
 
   return parsed
@@ -21,7 +24,7 @@ const readRequired = (env: Env, key: string): string => {
   const rawValue = (env as unknown as Record<string, unknown>)[key]
 
   if (typeof rawValue !== 'string' || rawValue.trim().length === 0) {
-    throw invalidInput(`Missing required environment variable: ${String(key)}`)
+    throw envConfigError()
   }
 
   return rawValue
@@ -35,7 +38,7 @@ const readOptional = (env: Env, key: string): string | undefined => {
 
 export const assertDatabaseBinding = (env: Env): D1Database => {
   if (!env.DB || typeof env.DB.prepare !== 'function') {
-    throw invalidInput('Missing required D1 binding: DB')
+    throw envConfigError()
   }
 
   return env.DB
@@ -48,11 +51,9 @@ export const readConfig = (env: Env): AppConfig => {
     authIssuer: readRequired(env, 'AUTH_ISSUER'),
     authAudience: readRequired(env, 'AUTH_AUDIENCE'),
     accessTokenTtlSeconds: toPositiveInteger(
-      'ACCESS_TOKEN_TTL_SECONDS',
       readRequired(env, 'ACCESS_TOKEN_TTL_SECONDS'),
     ),
     refreshTokenTtlSeconds: toPositiveInteger(
-      'REFRESH_TOKEN_TTL_SECONDS',
       readRequired(env, 'REFRESH_TOKEN_TTL_SECONDS'),
     ),
     authJwtSecret: readRequired(env, 'AUTH_JWT_SECRET'),
