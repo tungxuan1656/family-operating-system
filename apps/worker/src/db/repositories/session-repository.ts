@@ -114,20 +114,24 @@ export const findSessionById = async (
   return toRefreshSession(row)
 }
 
-export const revokeSession = async (
+export const revokeSessionIfActive = async (
   db: D1Database,
   sessionId: string,
-): Promise<void> => {
+): Promise<boolean> => {
   const nowEpoch = Date.now()
 
-  await db
+  const result = await db
     .prepare(
       `UPDATE refresh_sessions
        SET revoked_at = ?, updated_at = ?
-       WHERE id = ?`,
+       WHERE id = ?
+         AND revoked_at IS NULL
+         AND expires_at > ?`,
     )
-    .bind(nowEpoch, nowEpoch, sessionId)
+    .bind(nowEpoch, nowEpoch, sessionId, nowEpoch)
     .run()
+
+  return Number(result.meta.changes ?? 0) === 1
 }
 
 export const isSessionActive = (session: RefreshSession): boolean => {

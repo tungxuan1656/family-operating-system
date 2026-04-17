@@ -176,6 +176,76 @@ describe('Worker foundation', () => {
     expect(protectedPayload.data.user.id).toBe(exchangePayload.data.user.id)
   })
 
+  it('preserves existing user profile fields on sparse provider claims', async () => {
+    const initialExchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-sparse:user-sparse@example.com',
+        }),
+      },
+    )
+
+    const initialExchangePayload = await parseJson<
+      ApiEnvelope<{
+        user: {
+          id: string
+          email: string | null
+        }
+      }>
+    >(initialExchangeResponse)
+
+    await env.DB.prepare(
+      `UPDATE users
+       SET display_name = ?, avatar_url = ?
+       WHERE id = ?`,
+    )
+      .bind(
+        'Saved Name',
+        'https://cdn.example.com/avatar.png',
+        initialExchangePayload.data.user.id,
+      )
+      .run()
+
+    const sparseExchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-sparse',
+        }),
+      },
+    )
+
+    const sparseExchangePayload = await parseJson<
+      ApiEnvelope<{
+        user: {
+          email: string | null
+          displayName: string | null
+          avatarUrl: string | null
+        }
+      }>
+    >(sparseExchangeResponse)
+
+    expect(sparseExchangeResponse.status).toBe(200)
+    expect(sparseExchangePayload.data.user.email).toBe(
+      'user-sparse@example.com',
+    )
+    expect(sparseExchangePayload.data.user.displayName).toBe('Saved Name')
+    expect(sparseExchangePayload.data.user.avatarUrl).toBe(
+      'https://cdn.example.com/avatar.png',
+    )
+  })
+
   it('rotates refresh token and invalidates old refresh token', async () => {
     const exchangeResponse = await SELF.fetch(
       'https://example.com/api/v1/auth/provider/exchange',

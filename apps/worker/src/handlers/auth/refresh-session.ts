@@ -2,7 +2,7 @@ import {
   createRefreshSession,
   findSessionByIdAndHash,
   isSessionActive,
-  revokeSession,
+  revokeSessionIfActive,
 } from '@/db/repositories/session-repository'
 import { readConfig } from '@/lib/env'
 import { unauthenticated } from '@/lib/errors'
@@ -54,7 +54,11 @@ export const refreshSession = async (
     throw unauthenticated('Refresh token is invalid, expired, or revoked.')
   }
 
-  await revokeSession(env.DB, existingSession.id)
+  const isRevoked = await revokeSessionIfActive(env.DB, existingSession.id)
+
+  if (!isRevoked) {
+    throw unauthenticated('Refresh token is invalid, expired, or revoked.')
+  }
 
   const rotatedSessionId = newId()
   const accessToken = await issueAccessToken(

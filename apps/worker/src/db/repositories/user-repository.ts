@@ -78,7 +78,10 @@ const updateIdentityUser = async (
   await db
     .prepare(
       `UPDATE users
-       SET display_name = ?, primary_email = ?, avatar_url = ?, updated_at = ?
+       SET display_name = COALESCE(?, display_name),
+           primary_email = COALESCE(?, primary_email),
+           avatar_url = COALESCE(?, avatar_url),
+           updated_at = ?
        WHERE id = ?`,
     )
     .bind(identity.name, identity.email, identity.picture, nowEpoch, userId)
@@ -87,7 +90,9 @@ const updateIdentityUser = async (
   await db
     .prepare(
       `UPDATE auth_identities
-       SET provider_email = ?, last_login_at = ?, updated_at = ?
+       SET provider_email = COALESCE(?, provider_email),
+           last_login_at = ?,
+           updated_at = ?
        WHERE provider = ? AND provider_subject = ?`,
     )
     .bind(identity.email, nowEpoch, nowEpoch, 'firebase', identity.subject)
