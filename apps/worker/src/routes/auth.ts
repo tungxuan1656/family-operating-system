@@ -1,28 +1,19 @@
 import { Hono } from 'hono'
-import { z } from 'zod'
+import type { ZodSchema } from 'zod'
 
+import {
+  type AppBindings,
+  exchangeProviderRequestSchema,
+  refreshSessionRequestSchema,
+} from '@/dto'
 import { exchangeProviderToken } from '@/handlers/auth/exchange-provider-token'
 import { refreshSession } from '@/handlers/auth/refresh-session'
 import { invalidInput } from '@/lib/errors'
 import { success } from '@/lib/response'
-import type { AppBindings } from '@/lib/types'
-
-const exchangeSchema = z
-  .object({
-    provider: z.literal('firebase'),
-    idToken: z.string().min(1),
-  })
-  .strict()
-
-const refreshSchema = z
-  .object({
-    refreshToken: z.string().min(1),
-  })
-  .strict()
 
 const readJsonBody = async <T>(
   request: Request,
-  schema: z.ZodSchema<T>,
+  schema: ZodSchema<T>,
 ): Promise<T> => {
   let rawBody: unknown
 
@@ -47,7 +38,7 @@ const readJsonBody = async <T>(
 export const authRoutes = new Hono<AppBindings>()
 
 authRoutes.post('/auth/provider/exchange', async (ctx) => {
-  const body = await readJsonBody(ctx.req.raw, exchangeSchema)
+  const body = await readJsonBody(ctx.req.raw, exchangeProviderRequestSchema)
   const result = await exchangeProviderToken(ctx.env, {
     provider: body.provider,
     idToken: body.idToken,
@@ -59,7 +50,7 @@ authRoutes.post('/auth/provider/exchange', async (ctx) => {
 })
 
 authRoutes.post('/auth/refresh', async (ctx) => {
-  const body = await readJsonBody(ctx.req.raw, refreshSchema)
+  const body = await readJsonBody(ctx.req.raw, refreshSessionRequestSchema)
   const result = await refreshSession(ctx.env, {
     refreshToken: body.refreshToken,
     userAgent: ctx.req.header('user-agent') ?? null,

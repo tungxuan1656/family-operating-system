@@ -1,11 +1,12 @@
 import { Hono } from 'hono'
 
+import type { AppBindings } from '@/dto'
 import { notFound } from '@/lib/errors'
 import { fromUnknownError } from '@/lib/response'
-import type { AppBindings } from '@/lib/types'
 import { requestContextMiddleware } from '@/middlewares/request-context'
 import { authRoutes } from '@/routes/auth'
 import { healthRoutes } from '@/routes/health'
+import { profileRoutes } from '@/routes/profile'
 import { protectedRoutes } from '@/routes/protected'
 
 const app = new Hono<AppBindings>()
@@ -20,6 +21,7 @@ app.notFound(() => {
 
 app.route('/api/v1', healthRoutes)
 app.route('/api/v1', authRoutes)
+app.route('/api/v1', profileRoutes)
 app.route('/api/v1', protectedRoutes)
 
 export default {

@@ -4,30 +4,20 @@ import {
   isSessionActive,
   revokeSessionIfActive,
 } from '@/db/repositories/session-repository'
+import type {
+  AppBindings,
+  RefreshSessionInput,
+  RefreshSessionOutput,
+} from '@/dto'
 import { readConfig } from '@/lib/env'
 import { unauthenticated } from '@/lib/errors'
-import type { AppBindings } from '@/lib/types'
-import { newId } from '@/utils/id'
 import {
   issueAccessToken,
   issueRefreshToken,
   verifyRefreshToken,
-} from '@/utils/jwt'
-import { hashRefreshToken } from '@/utils/security'
-
-export interface RefreshSessionInput {
-  refreshToken: string
-  userAgent: string | null
-  ipAddress: string | null
-}
-
-export interface RefreshSessionOutput {
-  tokenType: 'Bearer'
-  accessToken: string
-  accessTokenExpiresIn: number
-  refreshToken: string
-  refreshTokenExpiresIn: number
-}
+} from '@/utils/auth/jwt'
+import { hashRefreshToken } from '@/utils/auth/security'
+import { newId } from '@/utils/shared/id'
 
 export const refreshSession = async (
   env: AppBindings['Bindings'],

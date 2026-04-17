@@ -1,17 +1,9 @@
-import { type JWTPayload, jwtVerify, SignJWT } from 'jose'
+import { jwtVerify, SignJWT } from 'jose'
 
+import type { AppConfig, SessionTokenKind, SessionTokenPayload } from '@/dto'
 import { unauthenticated } from '@/lib/errors'
-import type { AppConfig } from '@/lib/types'
 
 const encoder = new TextEncoder()
-
-type SessionTokenKind = 'access' | 'refresh'
-
-export interface SessionTokenPayload extends JWTPayload {
-  sub: string
-  sid: string
-  typ: SessionTokenKind
-}
 
 const issueToken = async (
   config: AppConfig,

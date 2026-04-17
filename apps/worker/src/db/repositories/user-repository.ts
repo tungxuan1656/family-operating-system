@@ -1,4 +1,4 @@
-import { newId } from '@/utils/id'
+import { newId } from '@/utils/shared/id'
 
 export interface StoredUser {
   id: string
@@ -43,7 +43,7 @@ const findIdentityUserId = async (
   return existingIdentity?.user_id ?? null
 }
 
-const loadUserById = async (
+export const loadUserById = async (
   db: D1Database,
   userId: string,
 ): Promise<StoredUser> => {
@@ -67,6 +67,47 @@ const loadUserById = async (
   }
 
   return toStoredUser(user)
+}
+
+export interface UpdateUserProfileInput {
+  displayName?: string | null
+  avatarUrl?: string | null
+}
+
+export const updateUserProfile = async (
+  db: D1Database,
+  userId: string,
+  input: UpdateUserProfileInput,
+): Promise<StoredUser> => {
+  const displayName =
+    input.displayName === undefined ? undefined : input.displayName
+  const avatarUrl = input.avatarUrl === undefined ? undefined : input.avatarUrl
+
+  await db
+    .prepare(
+      `UPDATE users
+       SET display_name = CASE
+             WHEN ?1 THEN ?2
+             ELSE display_name
+           END,
+           avatar_url = CASE
+             WHEN ?3 THEN ?4
+             ELSE avatar_url
+           END,
+           updated_at = ?
+       WHERE id = ?`,
+    )
+    .bind(
+      displayName !== undefined ? 1 : 0,
+      displayName ?? null,
+      avatarUrl !== undefined ? 1 : 0,
+      avatarUrl ?? null,
+      Date.now(),
+      userId,
+    )
+    .run()
+
+  return loadUserById(db, userId)
 }
 
 const updateIdentityUser = async (

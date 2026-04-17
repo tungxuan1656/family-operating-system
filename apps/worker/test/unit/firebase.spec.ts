@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { AppError } from '@/lib/errors'
-import { verifyFirebaseIdToken } from '@/utils/firebase'
+import { verifyFirebaseIdToken } from '@/utils/auth/firebase'
 
 const baseConfig = {
   authIssuer: 'https://fos.local',
@@ -19,7 +19,7 @@ const baseConfig = {
 describe('firebase token verification', () => {
   it('accepts unsafe test token when allowed', async () => {
     const payload = await verifyFirebaseIdToken(
-      'test:user-1:user1@example.com',
+      'test:user-1:user1@example.com:User One:https://cdn.example.com/user-one.png',
       {
         ...baseConfig,
         allowInsecureTestTokens: true,
@@ -29,6 +29,8 @@ describe('firebase token verification', () => {
     expect(payload.sub).toBe('user-1')
     expect(payload.email).toBe('user1@example.com')
     expect(payload.emailVerified).toBe(true)
+    expect(payload.name).toBe('User One')
+    expect(payload.picture).toBe('https://cdn.example.com/user-one.png')
   })
 
   it('rejects unsafe test token when allow flag is disabled, even in local project', async () => {

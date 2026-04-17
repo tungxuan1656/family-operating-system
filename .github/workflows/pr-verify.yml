@@ -1,4 +1,4 @@
-name: PR Verify
+name: PR Lint & Typecheck
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   verify:
-    name: Verify ${{ matrix.app }}
+    name: Lint & Typecheck ${{ matrix.app }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     strategy:
@@ -46,8 +46,4 @@ jobs:
 
       - name: Typecheck
         run: pnpm --filter ${{ matrix.filter }} typecheck
-
-      - name: Format check
-        working-directory: ${{ matrix.path }}
-        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json}"
 

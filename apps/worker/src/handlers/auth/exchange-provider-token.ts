@@ -1,33 +1,15 @@
 import { createRefreshSession } from '@/db/repositories/session-repository'
 import { upsertUserByFirebaseIdentity } from '@/db/repositories/user-repository'
+import type {
+  AppBindings,
+  ExchangeProviderTokenInput,
+  ExchangeProviderTokenOutput,
+} from '@/dto'
 import { readConfig } from '@/lib/env'
-import type { AppBindings } from '@/lib/types'
-import { verifyFirebaseIdToken } from '@/utils/firebase'
-import { newId } from '@/utils/id'
-import { issueAccessToken, issueRefreshToken } from '@/utils/jwt'
-import { hashRefreshToken } from '@/utils/security'
-
-export interface ExchangeProviderTokenInput {
-  provider: 'firebase'
-  idToken: string
-  userAgent: string | null
-  ipAddress: string | null
-}
-
-export interface ExchangeProviderTokenOutput {
-  tokenType: 'Bearer'
-  accessToken: string
-  accessTokenExpiresIn: number
-  refreshToken: string
-  refreshTokenExpiresIn: number
-  user: {
-    id: string
-    email: string | null
-    displayName: string | null
-    avatarUrl: string | null
-    provider: 'firebase'
-  }
-}
+import { verifyFirebaseIdToken } from '@/utils/auth/firebase'
+import { issueAccessToken, issueRefreshToken } from '@/utils/auth/jwt'
+import { hashRefreshToken } from '@/utils/auth/security'
+import { newId } from '@/utils/shared/id'
 
 export const exchangeProviderToken = async (
   env: AppBindings['Bindings'],
