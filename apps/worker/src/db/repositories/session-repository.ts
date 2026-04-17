@@ -4,16 +4,16 @@ export interface RefreshSession {
   id: string
   userId: string
   tokenHash: string
-  expiresAt: string
-  revokedAt: string | null
+  expiresAt: number
+  revokedAt: number | null
 }
 
 const toRefreshSession = (row: {
   id: string
   user_id: string
   token_hash: string
-  expires_at: string
-  revoked_at: string | null
+  expires_at: number
+  revoked_at: number | null
 }): RefreshSession => ({
   id: row.id,
   userId: row.user_id,
@@ -28,7 +28,7 @@ export const createRefreshSession = async (
     sessionId?: string
     userId: string
     tokenHash: string
-    expiresAt: string
+    expiresAt: number
     userAgent: string | null
     ipAddress: string | null
   },
@@ -76,8 +76,8 @@ export const findSessionByIdAndHash = async (
       id: string
       user_id: string
       token_hash: string
-      expires_at: string
-      revoked_at: string | null
+      expires_at: number
+      revoked_at: number | null
     }>()
 
   if (!row) {
@@ -103,8 +103,8 @@ export const findSessionById = async (
       id: string
       user_id: string
       token_hash: string
-      expires_at: string
-      revoked_at: string | null
+      expires_at: number
+      revoked_at: number | null
     }>()
 
   if (!row) {
@@ -118,13 +118,15 @@ export const revokeSession = async (
   db: D1Database,
   sessionId: string,
 ): Promise<void> => {
+  const nowEpoch = Date.now()
+
   await db
     .prepare(
       `UPDATE refresh_sessions
        SET revoked_at = ?, updated_at = ?
        WHERE id = ?`,
     )
-    .bind(new Date().toISOString(), new Date().toISOString(), sessionId)
+    .bind(nowEpoch, nowEpoch, sessionId)
     .run()
 }
 
@@ -133,5 +135,5 @@ export const isSessionActive = (session: RefreshSession): boolean => {
     return false
   }
 
-  return new Date(session.expiresAt).getTime() > Date.now()
+  return session.expiresAt > Date.now()
 }

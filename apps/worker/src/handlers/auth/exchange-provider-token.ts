@@ -55,9 +55,7 @@ export const exchangeProviderToken = async (
     sessionId,
     userId: user.id,
     tokenHash,
-    expiresAt: new Date(
-      Date.now() + config.refreshTokenTtlSeconds * 1000,
-    ).toISOString(),
+    expiresAt: Date.now() + config.refreshTokenTtlSeconds * 1000,
     userAgent: input.userAgent,
     ipAddress: input.ipAddress,
   })

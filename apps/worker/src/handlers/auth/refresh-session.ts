@@ -76,9 +76,7 @@ export const refreshSession = async (
     sessionId: rotatedSessionId,
     userId: existingSession.userId,
     tokenHash: rotatedHash,
-    expiresAt: new Date(
-      Date.now() + config.refreshTokenTtlSeconds * 1000,
-    ).toISOString(),
+    expiresAt: Date.now() + config.refreshTokenTtlSeconds * 1000,
     userAgent: input.userAgent,
     ipAddress: input.ipAddress,
   })

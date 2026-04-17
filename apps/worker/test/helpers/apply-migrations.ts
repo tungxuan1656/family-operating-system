@@ -52,17 +52,47 @@ const parseMigrations = (): ParsedMigration[] => {
   return parsed
 }
 
-const splitStatements = (sql: string): string[] =>
-  sql
-    .split(';')
-    .map((statement) => statement.trim())
-    .filter((statement) => statement.length > 0)
-
 export const applyMigrations = async (db: D1Database): Promise<void> => {
   const migrations = parseMigrations()
 
   for (const migration of migrations) {
-    const statements = splitStatements(migration.sql)
+    const statements: string[] = []
+    const lines = migration.sql.split('\n')
+    let buffer: string[] = []
+    let inTrigger = false
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      if (trimmed.length === 0) {
+        continue
+      }
+
+      buffer.push(line)
+
+      if (!inTrigger && /^CREATE\s+TRIGGER/i.test(trimmed)) {
+        inTrigger = true
+      }
+
+      if (inTrigger) {
+        if (/^END;$/i.test(trimmed)) {
+          statements.push(buffer.join('\n'))
+          buffer = []
+          inTrigger = false
+        }
+
+        continue
+      }
+
+      if (trimmed.endsWith(';')) {
+        statements.push(buffer.join('\n'))
+        buffer = []
+      }
+    }
+
+    if (buffer.length > 0) {
+      statements.push(buffer.join('\n'))
+    }
 
     for (const statement of statements) {
       await db.prepare(statement).run()

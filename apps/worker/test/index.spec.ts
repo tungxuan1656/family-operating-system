@@ -38,6 +38,40 @@ type ApiEnvelope<T> = {
 const parseJson = async <T>(response: Response): Promise<T> =>
   response.json() as Promise<T>
 
+const insertFamilyTestGraph = async (): Promise<void> => {
+  await env.DB.prepare(
+    `INSERT INTO users (id, display_name, primary_email)
+     VALUES
+     ('u1', 'Owner', 'owner@example.com'),
+     ('u2', 'Adult', 'adult@example.com')`,
+  ).run()
+
+  await env.DB.prepare(
+    `INSERT INTO families (id, name, created_by)
+     VALUES ('f1', 'Family One', 'u1')`,
+  ).run()
+
+  await env.DB.prepare(
+    `INSERT INTO family_members (id, family_id, user_id, role, state)
+     VALUES
+     ('m1', 'f1', 'u1', 'owner', 'active'),
+     ('m2', 'f1', 'u2', 'adult', 'active')`,
+  ).run()
+
+  await env.DB.prepare(
+    `INSERT INTO rewards (
+      id,
+      family_id,
+      title,
+      point_type,
+      point_cost,
+      decision_owner_member_id,
+      status
+    )
+    VALUES ('r1', 'f1', 'Movie Night', 'task', 10, 'm1', 'active')`,
+  ).run()
+}
+
 beforeEach(async () => {
   await applyMigrations(env.DB)
 
@@ -316,5 +350,107 @@ describe('Worker foundation', () => {
 
     expect(protectedResponse.status).toBe(401)
     expect(protectedPayload.error.code).toBe('UNAUTHENTICATED')
+  })
+
+  it('rejects invalid point_type via schema CHECK', async () => {
+    await insertFamilyTestGraph()
+
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO contributions (
+          id,
+          family_id,
+          actor_member_id,
+          subject_member_id,
+          point_type,
+          point_value,
+          state,
+          description
+        )
+        VALUES ('c1', 'f1', 'm1', 'm2', 'bonus', 5, 'pending', 'invalid type')`,
+      ).run(),
+    ).rejects.toThrow()
+  })
+
+  it('rejects cross-family references via composite FK', async () => {
+    await insertFamilyTestGraph()
+
+    await env.DB.prepare(
+      `INSERT INTO contributions (
+        id,
+        family_id,
+        actor_member_id,
+        subject_member_id,
+        point_type,
+        point_value,
+        state,
+        description
+      )
+      VALUES ('c1', 'f1', 'm1', 'm2', 'task', 5, 'pending', 'valid')`,
+    ).run()
+
+    await env.DB.prepare(
+      `INSERT INTO users (id, display_name, primary_email)
+       VALUES ('u3', 'Owner Two', 'owner2@example.com')`,
+    ).run()
+
+    await env.DB.prepare(
+      `INSERT INTO families (id, name, created_by)
+       VALUES ('f2', 'Family Two', 'u3')`,
+    ).run()
+
+    await env.DB.prepare(
+      `INSERT INTO family_members (id, family_id, user_id, role, state)
+       VALUES ('m3', 'f2', 'u3', 'owner', 'active')`,
+    ).run()
+
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO contribution_events (
+          id,
+          family_id,
+          contribution_id,
+          event_type,
+          actor_member_id,
+          visibility,
+          note
+        )
+        VALUES ('ce1', 'f2', 'c1', 'submitted', 'm3', 'all', 'cross family')`,
+      ).run(),
+    ).rejects.toThrow()
+  })
+
+  it('rejects non-positive points for contribution and reward request snapshot', async () => {
+    await insertFamilyTestGraph()
+
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO contributions (
+          id,
+          family_id,
+          actor_member_id,
+          subject_member_id,
+          point_type,
+          point_value,
+          state,
+          description
+        )
+        VALUES ('c1', 'f1', 'm1', 'm2', 'task', 0, 'pending', 'invalid point value')`,
+      ).run(),
+    ).rejects.toThrow()
+
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO reward_requests (
+          id,
+          family_id,
+          reward_id,
+          requester_member_id,
+          point_cost_snapshot,
+          state
+        )
+        VALUES ('rr1', 'f1', 'r1', 'm2', 0, 'submitted')`,
+      ).run(),
+    ).rejects.toThrow()
   })
 })

@@ -40,7 +40,7 @@ export const upsertUserByFirebaseIdentity = async (
     .bind('firebase', identity.subject)
     .first<{ user_id: string }>()
 
-  const nowIso = new Date().toISOString()
+  const nowEpoch = Date.now()
 
   if (existingIdentity) {
     await db
@@ -53,7 +53,7 @@ export const upsertUserByFirebaseIdentity = async (
         identity.name,
         identity.email,
         identity.picture,
-        nowIso,
+        nowEpoch,
         existingIdentity.user_id,
       )
       .run()
@@ -64,7 +64,7 @@ export const upsertUserByFirebaseIdentity = async (
          SET provider_email = ?, last_login_at = ?, updated_at = ?
          WHERE provider = ? AND provider_subject = ?`,
       )
-      .bind(identity.email, nowIso, nowIso, 'firebase', identity.subject)
+      .bind(identity.email, nowEpoch, nowEpoch, 'firebase', identity.subject)
       .run()
 
     const updated = await db
