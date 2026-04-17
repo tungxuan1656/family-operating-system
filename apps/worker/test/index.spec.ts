@@ -78,6 +78,17 @@ describe('Worker foundation', () => {
     expect(payload.error.code).toBe('INVALID_INPUT')
   })
 
+  it('rejects protected route when bearer token is missing', async () => {
+    const response = await SELF.fetch(
+      'https://example.com/api/v1/protected/ping',
+    )
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(401)
+    expect(payload.error.code).toBe('UNAUTHENTICATED')
+  })
+
   it('exchanges firebase token and accesses protected route', async () => {
     const exchangeResponse = await SELF.fetch(
       'https://example.com/api/v1/auth/provider/exchange',
@@ -200,5 +211,110 @@ describe('Worker foundation', () => {
 
     expect(oldRefreshReplayResponse.status).toBe(401)
     expect(oldRefreshReplayPayload.error.code).toBe('UNAUTHENTICATED')
+  })
+
+  it('rejects old access token after refresh rotation', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-3:user3@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{
+        accessToken: string
+        refreshToken: string
+      }>
+    >(exchangeResponse)
+
+    const refreshResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/refresh',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          refreshToken: exchangePayload.data.refreshToken,
+        }),
+      },
+    )
+
+    expect(refreshResponse.status).toBe(200)
+
+    const protectedResponse = await SELF.fetch(
+      'https://example.com/api/v1/protected/ping',
+      {
+        headers: {
+          authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        },
+      },
+    )
+
+    const protectedPayload = await parseJson<{
+      error: { code: string }
+    }>(protectedResponse)
+
+    expect(protectedResponse.status).toBe(401)
+    expect(protectedPayload.error.code).toBe('UNAUTHENTICATED')
+  })
+
+  it('rejects access token when user has been deleted', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-4:user4@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{
+        accessToken: string
+        user: { id: string }
+      }>
+    >(exchangeResponse)
+
+    await env.DB.prepare('DELETE FROM refresh_sessions WHERE user_id = ?')
+      .bind(exchangePayload.data.user.id)
+      .run()
+
+    await env.DB.prepare('DELETE FROM auth_identities WHERE user_id = ?')
+      .bind(exchangePayload.data.user.id)
+      .run()
+
+    await env.DB.prepare('DELETE FROM users WHERE id = ?')
+      .bind(exchangePayload.data.user.id)
+      .run()
+
+    const protectedResponse = await SELF.fetch(
+      'https://example.com/api/v1/protected/ping',
+      {
+        headers: {
+          authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        },
+      },
+    )
+
+    const protectedPayload = await parseJson<{
+      error: { code: string }
+    }>(protectedResponse)
+
+    expect(protectedResponse.status).toBe(401)
+    expect(protectedPayload.error.code).toBe('UNAUTHENTICATED')
   })
 })
