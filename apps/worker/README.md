@@ -56,8 +56,44 @@ pnpm --filter worker test
 pnpm --filter worker deploy
 ```
 
+## D1 Migrations
+
+- Migration files are stored in `migrations/`.
+- Use timestamp/sequence naming, e.g. `0001_init.sql`, `0002_add_xxx.sql`.
+
+Apply migrations locally:
+
+```bash
+pnpm --filter worker db:migrate:local
+```
+
+Apply migrations remotely:
+
+```bash
+pnpm --filter worker db:migrate:remote
+```
+
 ## Configuration
 
 - Main entry: `src/index.ts`
 - Wrangler config: `wrangler.jsonc`
 - Add D1 and other bindings in `wrangler.jsonc`, then run `pnpm --filter worker cf-typegen`.
+
+### Environment strategy
+
+- Keep `wrangler.jsonc` for runtime/bindings only (name, main, compatibility, d1 bindings).
+- Keep local env values in `.dev.vars` (not committed).
+- Use `wrangler secret put` for remote secrets.
+
+Local setup:
+
+```bash
+cp apps/worker/.dev.vars.example apps/worker/.dev.vars
+```
+
+Remote secrets setup example:
+
+```bash
+pnpm --filter worker exec wrangler secret put AUTH_JWT_SECRET
+pnpm --filter worker exec wrangler secret put AUTH_REFRESH_TOKEN_PEPPER
+```
