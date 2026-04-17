@@ -453,4 +453,64 @@ describe('Worker foundation', () => {
       ).run(),
     ).rejects.toThrow()
   })
+
+  it('rejects invalid event_type via schema CHECK', async () => {
+    await insertFamilyTestGraph()
+
+    await env.DB.prepare(
+      `INSERT INTO contributions (
+        id,
+        family_id,
+        actor_member_id,
+        subject_member_id,
+        point_type,
+        point_value,
+        state,
+        description
+      )
+      VALUES ('c1', 'f1', 'm1', 'm2', 'task', 5, 'pending', 'valid')`,
+    ).run()
+
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO contribution_events (
+          id,
+          family_id,
+          contribution_id,
+          event_type,
+          actor_member_id,
+          visibility,
+          note
+        )
+        VALUES ('ce1', 'f1', 'c1', 'accepted', 'm1', 'all', 'invalid event')`,
+      ).run(),
+    ).rejects.toThrow()
+
+    await env.DB.prepare(
+      `INSERT INTO reward_requests (
+        id,
+        family_id,
+        reward_id,
+        requester_member_id,
+        point_cost_snapshot,
+        state
+      )
+      VALUES ('rr1', 'f1', 'r1', 'm2', 10, 'submitted')`,
+    ).run()
+
+    await expect(
+      env.DB.prepare(
+        `INSERT INTO reward_request_events (
+          id,
+          family_id,
+          reward_request_id,
+          event_type,
+          actor_member_id,
+          visibility,
+          note
+        )
+        VALUES ('rre1', 'f1', 'rr1', 'approved', 'm1', 'all', 'invalid event')`,
+      ).run(),
+    ).rejects.toThrow()
+  })
 })

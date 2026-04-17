@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS contribution_events (
   visibility TEXT NOT NULL DEFAULT 'all',
   note TEXT,
   created_at INTEGER NOT NULL DEFAULT ((unixepoch() * 1000)),
+  CHECK (event_type IN ('submitted', 'approved', 'rejected')),
   CHECK (visibility IN ('all', 'adults_only')),
   FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
   FOREIGN KEY(family_id, contribution_id) REFERENCES contributions(family_id, id) ON DELETE RESTRICT,
@@ -150,6 +151,7 @@ CREATE TABLE IF NOT EXISTS reward_request_events (
   visibility TEXT NOT NULL DEFAULT 'all',
   note TEXT,
   created_at INTEGER NOT NULL DEFAULT ((unixepoch() * 1000)),
+  CHECK (event_type IN ('submitted', 'accepted', 'rejected', 'delayed', 'fulfilled')),
   CHECK (visibility IN ('all', 'adults_only')),
   FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
   FOREIGN KEY(family_id, reward_request_id) REFERENCES reward_requests(family_id, id) ON DELETE RESTRICT,
@@ -206,20 +208,11 @@ CREATE INDEX IF NOT EXISTS idx_refresh_sessions_expires_at
 CREATE INDEX IF NOT EXISTS idx_families_created_by
   ON families(created_by);
 
-CREATE INDEX IF NOT EXISTS idx_family_members_family_id
-  ON family_members(family_id);
-
 CREATE INDEX IF NOT EXISTS idx_family_members_user_id
   ON family_members(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_family_members_user_family
   ON family_members(user_id, family_id);
-
-CREATE INDEX IF NOT EXISTS idx_child_profiles_family_id
-  ON child_profiles(family_id);
-
-CREATE INDEX IF NOT EXISTS idx_child_profiles_managed_by_member_id
-  ON child_profiles(managed_by_member_id);
 
 CREATE INDEX IF NOT EXISTS idx_child_profiles_family_managed_by
   ON child_profiles(family_id, managed_by_member_id);
@@ -227,11 +220,11 @@ CREATE INDEX IF NOT EXISTS idx_child_profiles_family_managed_by
 CREATE INDEX IF NOT EXISTS idx_contributions_family_created
   ON contributions(family_id, created_at);
 
-CREATE INDEX IF NOT EXISTS idx_contributions_actor_member_id
-  ON contributions(actor_member_id);
+CREATE INDEX IF NOT EXISTS idx_contributions_family_actor_member
+  ON contributions(family_id, actor_member_id);
 
-CREATE INDEX IF NOT EXISTS idx_contributions_subject_member_id
-  ON contributions(subject_member_id);
+CREATE INDEX IF NOT EXISTS idx_contributions_family_subject_member
+  ON contributions(family_id, subject_member_id);
 
 CREATE INDEX IF NOT EXISTS idx_contribution_events_family_contribution_created
   ON contribution_events(family_id, contribution_id, created_at);
@@ -239,17 +232,14 @@ CREATE INDEX IF NOT EXISTS idx_contribution_events_family_contribution_created
 CREATE INDEX IF NOT EXISTS idx_contribution_events_family_created
   ON contribution_events(family_id, created_at);
 
-CREATE INDEX IF NOT EXISTS idx_contribution_events_actor_member_id
-  ON contribution_events(actor_member_id);
-
-CREATE INDEX IF NOT EXISTS idx_rewards_family_id
-  ON rewards(family_id);
+CREATE INDEX IF NOT EXISTS idx_contribution_events_family_actor_member
+  ON contribution_events(family_id, actor_member_id);
 
 CREATE INDEX IF NOT EXISTS idx_rewards_family_status_created
   ON rewards(family_id, status, created_at);
 
-CREATE INDEX IF NOT EXISTS idx_rewards_decision_owner_member_id
-  ON rewards(decision_owner_member_id);
+CREATE INDEX IF NOT EXISTS idx_rewards_family_decision_owner_member
+  ON rewards(family_id, decision_owner_member_id);
 
 CREATE INDEX IF NOT EXISTS idx_reward_requests_family_created
   ON reward_requests(family_id, created_at);
@@ -257,11 +247,11 @@ CREATE INDEX IF NOT EXISTS idx_reward_requests_family_created
 CREATE INDEX IF NOT EXISTS idx_reward_requests_family_state_created
   ON reward_requests(family_id, state, created_at);
 
-CREATE INDEX IF NOT EXISTS idx_reward_requests_reward_id
-  ON reward_requests(reward_id);
+CREATE INDEX IF NOT EXISTS idx_reward_requests_family_reward
+  ON reward_requests(family_id, reward_id);
 
-CREATE INDEX IF NOT EXISTS idx_reward_requests_requester_member_id
-  ON reward_requests(requester_member_id);
+CREATE INDEX IF NOT EXISTS idx_reward_requests_family_requester_member
+  ON reward_requests(family_id, requester_member_id);
 
 CREATE INDEX IF NOT EXISTS idx_reward_request_events_family_request_created
   ON reward_request_events(family_id, reward_request_id, created_at);
@@ -269,8 +259,8 @@ CREATE INDEX IF NOT EXISTS idx_reward_request_events_family_request_created
 CREATE INDEX IF NOT EXISTS idx_reward_request_events_family_created
   ON reward_request_events(family_id, created_at);
 
-CREATE INDEX IF NOT EXISTS idx_reward_request_events_actor_member_id
-  ON reward_request_events(actor_member_id);
+CREATE INDEX IF NOT EXISTS idx_reward_request_events_family_actor_member
+  ON reward_request_events(family_id, actor_member_id);
 
 CREATE INDEX IF NOT EXISTS idx_points_ledger_family_member
   ON points_ledger(family_id, member_id, created_at);
