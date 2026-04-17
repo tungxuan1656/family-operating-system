@@ -8,8 +8,10 @@
     "dev": "wrangler dev",
     "lint": "eslint .",
     "start": "wrangler dev",
-    "test": "vitest",
+    "test": "vitest run",
     "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply fos-main --local --config ./wrangler.jsonc",
+    "db:migrate:remote": "wrangler d1 migrations apply fos-main --remote --config ./wrangler.jsonc",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "tsc --noEmit"
   },
@@ -31,5 +33,12 @@
     "typescript-eslint": "^8.58.2",
     "vitest": "~3.2.0",
     "wrangler": "^4.83.0"
+  },
+  "dependencies": {
+    "hono": "^4.12.14",
+    "jose": "^6.2.2",
+    "ulid": "^3.0.2",
+    "web-push": "^3.6.7",
+    "zod": "^4.3.6"
   }
 }

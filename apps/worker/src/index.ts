@@ -1,14 +1,27 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Hono } from 'hono'
 
-export default {} satisfies ExportedHandler
+import { notFound } from '@/lib/errors'
+import { fromUnknownError } from '@/lib/response'
+import type { AppBindings } from '@/lib/types'
+import { requestContextMiddleware } from '@/middlewares/request-context'
+import { authRoutes } from '@/routes/auth'
+import { healthRoutes } from '@/routes/health'
+import { protectedRoutes } from '@/routes/protected'
+
+const app = new Hono<AppBindings>()
+
+app.use('*', requestContextMiddleware)
+
+app.onError((error, ctx) => fromUnknownError(ctx, error))
+
+app.notFound(() => {
+  throw notFound('Route not found.')
+})
+
+app.route('/api/v1', healthRoutes)
+app.route('/api/v1', authRoutes)
+app.route('/api/v1', protectedRoutes)
+
+export default {
+  fetch: app.fetch,
+} satisfies ExportedHandler<Env>
