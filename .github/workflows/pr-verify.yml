@@ -1,4 +1,4 @@
-name: PR Verify
+name: PR Lint & Typecheck
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   verify:
-    name: Verify ${{ matrix.app }}
+    name: Lint & Typecheck ${{ matrix.app }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     strategy:
