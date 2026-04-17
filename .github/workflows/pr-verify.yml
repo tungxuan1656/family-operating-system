@@ -1,0 +1,53 @@
+name: PR Verify
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify ${{ matrix.app }}
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: web
+            filter: web
+            path: apps/web
+          - app: worker
+            filter: worker
+            path: apps/worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter ${{ matrix.filter }} lint
+
+      - name: Typecheck
+        run: pnpm --filter ${{ matrix.filter }} typecheck
+
+      - name: Format check
+        working-directory: ${{ matrix.path }}
+        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json}"
+
