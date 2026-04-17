@@ -53,6 +53,13 @@ Error:
 
 ## Key MVP Endpoints
 
+### Authentication And Profile
+
+- `POST /v1/auth/provider/exchange`
+- `POST /v1/auth/refresh`
+- `GET /v1/profile`
+- `PATCH /v1/profile`
+
 ### Family And Membership
 
 - `POST /v1/families`
@@ -89,10 +96,9 @@ Error:
 - `POST /v1/reward-requests/:id/delay`
 - `POST /v1/reward-requests/:id/fulfill`
 
-### Profile And Activity
+### Profile Preferences And Activity
 
 - `GET /v1/activities`
-- `GET /v1/profile`
 - `PATCH /v1/profile/preferences`
 
 ## Lifecycle Rules
@@ -118,3 +124,10 @@ Error:
 
 - Backend should verify response shape and error codes.
 - Frontend should integrate only against documented fields and states.
+
+## Profile Notes
+
+- `email` is readonly and comes from the authenticated identity provider.
+- `PATCH /v1/profile` updates mirrored profile metadata only: `displayName` and `avatarUrl`.
+- Avatar file upload is not a worker endpoint in this slice.
+- The web client uploads the avatar to Firebase Storage, updates Firebase Auth profile metadata, then mirrors the same URL to the worker via `PATCH /v1/profile`.

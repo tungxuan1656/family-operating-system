@@ -14,10 +14,11 @@ visibility.
 
 1. User interacts with the web app.
 2. Web app authenticates the user through Firebase Auth.
-3. Web app calls backend APIs with authenticated context.
-4. Worker validates input, membership, permissions, and lifecycle rules.
-5. Worker reads and writes family-scoped data in D1.
-6. Worker returns contract-compliant JSON responses.
+3. Web app uploads avatar files to Firebase Storage when profile media changes.
+4. Web app calls backend APIs with authenticated context.
+5. Worker validates input, membership, permissions, and lifecycle rules.
+6. Worker reads and writes family-scoped data in D1.
+7. Worker returns contract-compliant JSON responses.
 
 ## Boundary Rules
 
@@ -26,12 +27,14 @@ visibility.
 - Owns rendering, local interaction flow, and client-side UX validation.
 - Should not be the source of truth for business authority decisions.
 - Must handle backend error codes explicitly.
+- Owns Firebase Storage upload and Firebase Auth profile updates for avatar media.
 
 ### Worker
 
 - Owns business rule enforcement.
 - Owns authorization, visibility filtering, and lifecycle transitions.
 - Owns canonical persistence and audit behavior.
+- Mirrors Firebase profile metadata needed for backend-owned reads such as `GET /v1/profile`.
 
 ## Shared System Conventions
 

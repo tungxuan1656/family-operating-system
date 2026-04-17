@@ -123,6 +123,442 @@ describe('Worker foundation', () => {
     expect(payload.error.code).toBe('UNAUTHENTICATED')
   })
 
+  it('returns current profile for an authenticated user', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile:user-profile@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{
+        accessToken: string
+        user: {
+          id: string
+          email: string | null
+          displayName: string | null
+          avatarUrl: string | null
+        }
+      }>
+    >(exchangeResponse)
+
+    const profileResponse = await SELF.fetch(
+      'https://example.com/api/v1/profile',
+      {
+        headers: {
+          authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        },
+      },
+    )
+
+    const profilePayload = await parseJson<
+      ApiEnvelope<{
+        id: string
+        email: string | null
+        displayName: string | null
+        avatarUrl: string | null
+      }>
+    >(profileResponse)
+
+    expect(profileResponse.status).toBe(200)
+    expect(profilePayload.data).toEqual({
+      id: exchangePayload.data.user.id,
+      email: 'user-profile@example.com',
+      displayName: null,
+      avatarUrl: null,
+    })
+  })
+
+  it('rejects current profile request when bearer token is missing', async () => {
+    const response = await SELF.fetch('https://example.com/api/v1/profile')
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(401)
+    expect(payload.error.code).toBe('UNAUTHENTICATED')
+  })
+
+  it('updates display name only on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-name:user-profile-name@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{ accessToken: string; user: { id: string } }>
+    >(exchangeResponse)
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        displayName: 'Updated Name',
+      }),
+    })
+
+    const payload = await parseJson<
+      ApiEnvelope<{
+        id: string
+        email: string | null
+        displayName: string | null
+        avatarUrl: string | null
+      }>
+    >(response)
+
+    expect(response.status).toBe(200)
+    expect(payload.data.displayName).toBe('Updated Name')
+    expect(payload.data.avatarUrl).toBeNull()
+
+    const storedUser = await env.DB.prepare(
+      `SELECT display_name, avatar_url
+       FROM users
+       WHERE id = ?`,
+    )
+      .bind(exchangePayload.data.user.id)
+      .first<{ display_name: string | null; avatar_url: string | null }>()
+
+    expect(storedUser).toEqual({
+      display_name: 'Updated Name',
+      avatar_url: null,
+    })
+  })
+
+  it('updates avatar URL only on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-avatar:user-profile-avatar@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{ accessToken: string; user: { id: string } }>
+    >(exchangeResponse)
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        avatarUrl: 'https://firebasestorage.googleapis.com/avatar.png',
+      }),
+    })
+
+    const payload = await parseJson<
+      ApiEnvelope<{ displayName: string | null; avatarUrl: string | null }>
+    >(response)
+
+    expect(response.status).toBe(200)
+    expect(payload.data.displayName).toBeNull()
+    expect(payload.data.avatarUrl).toBe(
+      'https://firebasestorage.googleapis.com/avatar.png',
+    )
+  })
+
+  it('updates both display name and avatar URL on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-both:user-profile-both@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{ accessToken: string }>
+    >(exchangeResponse)
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        displayName: 'Parent One',
+        avatarUrl: 'https://firebasestorage.googleapis.com/parent-one.png',
+      }),
+    })
+
+    const payload = await parseJson<
+      ApiEnvelope<{ displayName: string | null; avatarUrl: string | null }>
+    >(response)
+
+    expect(response.status).toBe(200)
+    expect(payload.data).toMatchObject({
+      displayName: 'Parent One',
+      avatarUrl: 'https://firebasestorage.googleapis.com/parent-one.png',
+    })
+  })
+
+  it('clears display name and avatar URL on profile patch with null values', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-clear:user-profile-clear@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<
+      ApiEnvelope<{ accessToken: string; user: { id: string } }>
+    >(exchangeResponse)
+
+    await env.DB.prepare(
+      `UPDATE users
+       SET display_name = ?, avatar_url = ?
+       WHERE id = ?`,
+    )
+      .bind(
+        'Needs Clearing',
+        'https://firebasestorage.googleapis.com/needs-clearing.png',
+        exchangePayload.data.user.id,
+      )
+      .run()
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        displayName: null,
+        avatarUrl: null,
+      }),
+    })
+
+    const payload = await parseJson<
+      ApiEnvelope<{ displayName: string | null; avatarUrl: string | null }>
+    >(response)
+
+    expect(response.status).toBe(200)
+    expect(payload.data).toMatchObject({
+      displayName: null,
+      avatarUrl: null,
+    })
+  })
+
+  it('rejects invalid avatar URL on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-invalid-avatar:user-profile-invalid-avatar@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<ApiEnvelope<{ accessToken: string }>>(
+      exchangeResponse,
+    )
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        avatarUrl: 'not-a-url',
+      }),
+    })
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(400)
+    expect(payload.error.code).toBe('INVALID_INPUT')
+  })
+
+  it('rejects blank trimmed display name on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-blank-name:user-profile-blank-name@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<ApiEnvelope<{ accessToken: string }>>(
+      exchangeResponse,
+    )
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        displayName: '   ',
+      }),
+    })
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(400)
+    expect(payload.error.code).toBe('INVALID_INPUT')
+  })
+
+  it('rejects unknown fields on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-unknown:user-profile-unknown@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<ApiEnvelope<{ accessToken: string }>>(
+      exchangeResponse,
+    )
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        displayName: 'Known',
+        provider: 'firebase',
+      }),
+    })
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(400)
+    expect(payload.error.code).toBe('INVALID_INPUT')
+  })
+
+  it('rejects attempts to send email on profile patch', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-email:user-profile-email@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<ApiEnvelope<{ accessToken: string }>>(
+      exchangeResponse,
+    )
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: 'hijack@example.com',
+      }),
+    })
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(400)
+    expect(payload.error.code).toBe('INVALID_INPUT')
+  })
+
+  it('rejects empty profile patch payload', async () => {
+    const exchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken: 'test:firebase-user-profile-empty:user-profile-empty@example.com',
+        }),
+      },
+    )
+
+    const exchangePayload = await parseJson<ApiEnvelope<{ accessToken: string }>>(
+      exchangeResponse,
+    )
+
+    const response = await SELF.fetch('https://example.com/api/v1/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${exchangePayload.data.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    })
+
+    const payload = await parseJson<{ error: { code: string } }>(response)
+
+    expect(response.status).toBe(400)
+    expect(payload.error.code).toBe('INVALID_INPUT')
+  })
+
   it('exchanges firebase token and accesses protected route', async () => {
     const exchangeResponse = await SELF.fetch(
       'https://example.com/api/v1/auth/provider/exchange',
@@ -243,6 +679,73 @@ describe('Worker foundation', () => {
     expect(sparseExchangePayload.data.user.displayName).toBe('Saved Name')
     expect(sparseExchangePayload.data.user.avatarUrl).toBe(
       'https://cdn.example.com/avatar.png',
+    )
+  })
+
+  it('refreshes mirrored profile fields from provider claims when claims are present', async () => {
+    const initialExchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken:
+            'test:firebase-user-claim-refresh:user-claim-refresh@example.com',
+        }),
+      },
+    )
+
+    const initialExchangePayload = await parseJson<
+      ApiEnvelope<{
+        user: {
+          id: string
+        }
+      }>
+    >(initialExchangeResponse)
+
+    await env.DB.prepare(
+      `UPDATE users
+       SET display_name = ?, avatar_url = ?
+       WHERE id = ?`,
+    )
+      .bind(
+        'Mirrored Name',
+        'https://cdn.example.com/mirrored-avatar.png',
+        initialExchangePayload.data.user.id,
+      )
+      .run()
+
+    const secondExchangeResponse = await SELF.fetch(
+      'https://example.com/api/v1/auth/provider/exchange',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'firebase',
+          idToken:
+            'test:firebase-user-claim-refresh:user-claim-refresh@example.com:Firebase Name:https://firebasestorage.googleapis.com/firebase-avatar.png',
+        }),
+      },
+    )
+
+    const secondExchangePayload = await parseJson<
+      ApiEnvelope<{
+        user: {
+          displayName: string | null
+          avatarUrl: string | null
+        }
+      }>
+    >(secondExchangeResponse)
+
+    expect(secondExchangeResponse.status).toBe(200)
+    expect(secondExchangePayload.data.user.displayName).toBe('Firebase Name')
+    expect(secondExchangePayload.data.user.avatarUrl).toBe(
+      'https://firebasestorage.googleapis.com/firebase-avatar.png',
     )
   })
 

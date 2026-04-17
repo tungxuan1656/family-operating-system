@@ -31,7 +31,28 @@ const parseUnsafeTestToken = (
     return null
   }
 
-  const [, sub, email] = idToken.split(':')
+  const tokenPayload = idToken.slice('test:'.length)
+  const firstSeparator = tokenPayload.indexOf(':')
+  const sub =
+    firstSeparator === -1 ? tokenPayload : tokenPayload.slice(0, firstSeparator)
+
+  const secondSeparator = tokenPayload.indexOf(':', firstSeparator + 1)
+  const thirdSeparator =
+    secondSeparator === -1 ? -1 : tokenPayload.indexOf(':', secondSeparator + 1)
+  const email =
+    firstSeparator === -1
+      ? null
+      : secondSeparator === -1
+        ? tokenPayload.slice(firstSeparator + 1) || null
+        : tokenPayload.slice(firstSeparator + 1, secondSeparator) || null
+  const name =
+    secondSeparator === -1 || thirdSeparator === -1
+      ? null
+      : tokenPayload.slice(secondSeparator + 1, thirdSeparator) || null
+  const picture =
+    thirdSeparator === -1
+      ? null
+      : tokenPayload.slice(thirdSeparator + 1) || null
 
   if (!sub || sub.length === 0) {
     return null
@@ -41,8 +62,8 @@ const parseUnsafeTestToken = (
     sub,
     email: email ?? null,
     emailVerified: true,
-    name: null,
-    picture: null,
+    name: name ?? null,
+    picture: picture ?? null,
   }
 }
 
