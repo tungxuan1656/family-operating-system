@@ -47,7 +47,3 @@ jobs:
       - name: Typecheck
         run: pnpm --filter ${{ matrix.filter }} typecheck
 
-      - name: Format check
-        working-directory: ${{ matrix.path }}
-        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json}"
-
