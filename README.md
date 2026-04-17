@@ -10,7 +10,7 @@ This repository uses a monorepo layout with app packages under `apps/`:
 
 - `apps/web`: React web client.
 - `apps/worker`: Cloudflare Worker backend with D1-ready architecture.
-- `docs`: product concept and supporting documentation.
+- `docs`: product, planning, design, system, and delivery documentation.
 
 ## Product Idea
 
@@ -21,7 +21,7 @@ The product is designed around these goals:
 - Keep reward/request interactions voluntary and respectful.
 - Create playful motivation for both adults and children.
 
-The full product concept is documented in `docs/README.md`.
+The main documentation entry point is `docs/README.md`.
 
 ## Tech Overview
 
@@ -63,4 +63,3 @@ pnpm deploy:worker
 
 - The backend is implemented in `apps/worker` and can be extended with D1 bindings in `wrangler.jsonc`.
 - The frontend standards for `apps/web` are maintained in `apps/web/standards`.
-
