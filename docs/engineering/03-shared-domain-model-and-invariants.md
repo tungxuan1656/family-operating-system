@@ -34,7 +34,7 @@ invariants.
 
 Business lifecycle definitions come from:
 
-- [../business/13-lifecycle-and-state-matrix.md](../business/13-lifecycle-and-state-matrix.md)
+- [../business/04-lifecycle-and-acceptance.md](../business/04-lifecycle-and-acceptance.md)
 
 Engineering requirement:
 
@@ -46,8 +46,7 @@ Engineering requirement:
 
 Business permission definitions come from:
 
-- [../business/12-approval-and-permissions-matrix.md](../business/12-approval-and-permissions-matrix.md)
-- [../business/16-visibility-matrix.md](../business/16-visibility-matrix.md)
+- [../business/03-roles-permissions-visibility.md](../business/03-roles-permissions-visibility.md)
 
 Engineering requirement:
 

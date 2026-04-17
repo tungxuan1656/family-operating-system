@@ -15,7 +15,7 @@ API/UI behavior and automated verification.
 
 | Trace ID | Business Source                 | Requirement Summary         | FE Scope         | BE Scope              | API Contract Ref     | Test Coverage             | Status | Owner      |
 | -------- | ------------------------------- | --------------------------- | ---------------- | --------------------- | -------------------- | ------------------------- | ------ | ---------- |
-| TRC-001  | business/15-acceptance-criteria | Example requirement summary | Screen/flow refs | Endpoint/service refs | Contract section ref | Unit/Integration/E2E refs | draft  | Unassigned |
+| TRC-001  | business/04-lifecycle-and-acceptance | Example requirement summary | Screen/flow refs | Endpoint/service refs | Contract section ref | Unit/Integration/E2E refs | draft  | Unassigned |
 
 ## Status Values
 

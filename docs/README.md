@@ -28,32 +28,18 @@ for architecture boundaries, API baseline, quality gates, and release controls.
 
 ## Business Reading Order
 
-Read the documents below in order. Each document depends on the one before it.
+Read the concise set below in order. For a small project, these six documents
+are the canonical source of truth.
 
-1. [Vision & Product Thesis](./business/01-vision-and-product-thesis.md)
-2. [Problem Statement & Opportunity Assessment](./business/02-problem-statement-and-opportunity-assessment.md)
-3. [Persona Pack](./business/03-persona-pack.md)
-4. [User Journey & Key Scenarios](./business/04-user-journey-and-key-scenarios.md)
-5. [Business PRD](./business/05-business-prd.md)
-6. [Business Rules Catalog](./business/06-business-rules-catalog.md)
-7. [Feature Prioritization & Release Roadmap](./business/07-feature-prioritization-and-release-roadmap.md)
-8. [KPI & Measurement Framework](./business/08-kpi-and-measurement-framework.md)
-9. [Risk, Assumptions & Validation Plan](./business/09-risk-assumptions-and-validation-plan.md)
-10. [Glossary & Canonical Terminology](./business/10-glossary-and-canonical-terminology.md)
+1. [Product Brief MVP](./business/01-product-brief-mvp.md)
+2. [Business Rules and Policy](./business/02-business-rules-and-policy.md)
+3. [Roles Permissions Visibility](./business/03-roles-permissions-visibility.md)
+4. [Lifecycle and Acceptance](./business/04-lifecycle-and-acceptance.md)
+5. [Roadmap KPI Risk](./business/05-roadmap-kpi-risk.md)
+6. [Glossary and Seeds](./business/06-glossary-and-seeds.md)
 
-## Planning-Ready BA Addendum
-
-Read this addendum after the core concept pack and before solution design. These
-documents close the domain decisions that engineering should not guess.
-
-11. [MVP Decision Log](./business/11-mvp-decision-log.md)
-12. [Approval & Permissions Matrix](./business/12-approval-and-permissions-matrix.md)
-13. [Lifecycle & State Matrix](./business/13-lifecycle-and-state-matrix.md)
-14. [Onboarding & Membership Model](./business/14-onboarding-and-membership-model.md)
-15. [Acceptance Criteria](./business/15-acceptance-criteria.md)
-16. [Visibility Matrix](./business/16-visibility-matrix.md)
-17. [Reward & Point Policy](./business/17-reward-and-point-policy.md)
-18. [MVP Seed Lists](./business/18-mvp-seed-lists.md)
+Legacy 18-document versions remain in [business/archive](./business/archive/)
+for historical reference.
 
 ## Shared Engineering Reading Order (Cross-Team)
 
@@ -74,17 +60,13 @@ implementation work.
 
 ## How To Use This Hub
 
-- Use the Vision and Problem docs to understand why the product should exist.
-- Use the Persona and Journey docs to understand how the product should feel
-  and where user tension will appear.
-- Use the Business PRD as the central handoff document before writing technical
-  design docs.
-- Use the Business Rules Catalog and Glossary as mandatory references when
-  defining data models, permissions, flows, labels, and UI copy.
-- Use the Planning-Ready BA Addendum to lock approval, lifecycle, visibility,
-  onboarding, and acceptance decisions before solution planning starts.
-- Use the Roadmap, KPI, and Risk docs to avoid hard-coding assumptions that are
-  still product decisions rather than settled rules.
+- Start with Product Brief to align goals, scope, and principles.
+- Use Business Rules and Lifecycle docs to lock state transitions and business
+  behavior before technical design.
+- Use Roles/Permissions/Visibility to align frontend rendering and backend
+  authorization.
+- Use Roadmap/KPI/Risk to prioritize implementation and validation loops.
+- Use Glossary/Seeds to keep terminology and onboarding defaults consistent.
 - Use `docs/engineering/` to align frontend and backend on shared technical
   boundaries before implementation detail splits into app-specific docs.
 - Use app-specific implementation standards for details:
@@ -99,8 +81,9 @@ implementation work.
 - The current app code is not yet a reliable source of business truth.
 - Technical design documents should align to this pack, then capture any
   technical tradeoffs separately.
-- The addendum documents are still non-technical; they define business intent
-  for state, authority, and visibility, not schema or API shape.
+- The concise business set is non-technical; it defines business intent for
+  state, authority, and visibility, not schema or API shape.
+- Archived business docs are historical context, not current canon.
 - If a future implementation conflicts with these docs, update the docs or write
   an explicit decision record instead of silently drifting.
 
