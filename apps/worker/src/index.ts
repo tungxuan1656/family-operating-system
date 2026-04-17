@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 
-import { notFound } from './lib/errors'
-import { fromUnknownError } from './lib/response'
-import type { AppBindings } from './lib/types'
-import { requestContextMiddleware } from './middlewares/request-context'
-import { authRoutes } from './routes/auth'
-import { healthRoutes } from './routes/health'
-import { protectedRoutes } from './routes/protected'
+import { notFound } from '@/lib/errors'
+import { fromUnknownError } from '@/lib/response'
+import type { AppBindings } from '@/lib/types'
+import { requestContextMiddleware } from '@/middlewares/request-context'
+import { authRoutes } from '@/routes/auth'
+import { healthRoutes } from '@/routes/health'
+import { protectedRoutes } from '@/routes/protected'
 
 const app = new Hono<AppBindings>()
 

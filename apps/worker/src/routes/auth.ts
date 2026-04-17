@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 
-import { exchangeProviderToken } from '../handlers/auth/exchange-provider-token'
-import { refreshSession } from '../handlers/auth/refresh-session'
-import { invalidInput } from '../lib/errors'
-import { success } from '../lib/response'
-import type { AppBindings } from '../lib/types'
+import { exchangeProviderToken } from '@/handlers/auth/exchange-provider-token'
+import { refreshSession } from '@/handlers/auth/refresh-session'
+import { invalidInput } from '@/lib/errors'
+import { success } from '@/lib/response'
+import type { AppBindings } from '@/lib/types'
 
 const exchangeSchema = z
   .object({

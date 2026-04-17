@@ -3,17 +3,17 @@ import {
   findSessionByIdAndHash,
   isSessionActive,
   revokeSession,
-} from '../../db/repositories/session-repository'
-import { readConfig } from '../../lib/env'
-import { unauthenticated } from '../../lib/errors'
-import type { AppBindings } from '../../lib/types'
-import { newId } from '../../utils/id'
+} from '@/db/repositories/session-repository'
+import { readConfig } from '@/lib/env'
+import { unauthenticated } from '@/lib/errors'
+import type { AppBindings } from '@/lib/types'
+import { newId } from '@/utils/id'
 import {
   issueAccessToken,
   issueRefreshToken,
   verifyRefreshToken,
-} from '../../utils/jwt'
-import { hashRefreshToken } from '../../utils/security'
+} from '@/utils/jwt'
+import { hashRefreshToken } from '@/utils/security'
 
 export interface RefreshSessionInput {
   refreshToken: string

@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from 'hono'
 
-import type { AppBindings } from '../lib/types'
-import { newId } from '../utils/id'
+import type { AppBindings } from '@/lib/types'
+import { newId } from '@/utils/id'
 
 export const requestContextMiddleware: MiddlewareHandler<AppBindings> = async (
   ctx,

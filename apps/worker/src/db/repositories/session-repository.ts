@@ -1,4 +1,4 @@
-import { newId } from '../../utils/id'
+import { newId } from '@/utils/id'
 
 export interface RefreshSession {
   id: string

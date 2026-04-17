@@ -1,7 +1,7 @@
 import { type JWTPayload, jwtVerify, SignJWT } from 'jose'
 
-import { unauthenticated } from '../lib/errors'
-import type { AppConfig } from '../lib/types'
+import { unauthenticated } from '@/lib/errors'
+import type { AppConfig } from '@/lib/types'
 
 const encoder = new TextEncoder()
 

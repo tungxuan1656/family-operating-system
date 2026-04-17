@@ -7,7 +7,7 @@ import {
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { applyMigrations } from './helpers/apply-migrations'
-import worker from '../src/index'
+import worker from '@/index'
 
 const IncomingRequest = Request
 
