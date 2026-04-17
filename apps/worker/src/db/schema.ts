@@ -35,7 +35,8 @@ export const CORE_SCHEMA_STATEMENTS = [
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     created_by TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+    created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    FOREIGN KEY(created_by) REFERENCES users(id)
   )`,
   `CREATE TABLE IF NOT EXISTS family_members (
     id TEXT PRIMARY KEY,
@@ -44,6 +45,7 @@ export const CORE_SCHEMA_STATEMENTS = [
     role TEXT NOT NULL,
     state TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    UNIQUE(family_id, user_id),
     FOREIGN KEY(family_id) REFERENCES families(id),
     FOREIGN KEY(user_id) REFERENCES users(id)
   )`,
@@ -60,21 +62,26 @@ export const CORE_SCHEMA_STATEMENTS = [
     id TEXT PRIMARY KEY,
     family_id TEXT NOT NULL,
     actor_member_id TEXT NOT NULL,
+    subject_member_id TEXT NOT NULL,
     point_type TEXT NOT NULL,
     point_value INTEGER NOT NULL,
     state TEXT NOT NULL,
     description TEXT,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    CHECK (state IN ('pending', 'approved', 'rejected')),
     FOREIGN KEY(family_id) REFERENCES families(id),
-    FOREIGN KEY(actor_member_id) REFERENCES family_members(id)
+    FOREIGN KEY(actor_member_id) REFERENCES family_members(id),
+    FOREIGN KEY(subject_member_id) REFERENCES family_members(id)
   )`,
   `CREATE TABLE IF NOT EXISTS contribution_events (
     id TEXT PRIMARY KEY,
     contribution_id TEXT NOT NULL,
     event_type TEXT NOT NULL,
     actor_member_id TEXT NOT NULL,
+    visibility TEXT NOT NULL DEFAULT 'all',
     note TEXT,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    CHECK (visibility IN ('all', 'adults_only')),
     FOREIGN KEY(contribution_id) REFERENCES contributions(id),
     FOREIGN KEY(actor_member_id) REFERENCES family_members(id)
   )`,
@@ -96,8 +103,10 @@ export const CORE_SCHEMA_STATEMENTS = [
     family_id TEXT NOT NULL,
     reward_id TEXT NOT NULL,
     requester_member_id TEXT NOT NULL,
+    point_cost_snapshot INTEGER NOT NULL,
     state TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    CHECK (state IN ('submitted', 'accepted', 'rejected', 'delayed', 'fulfilled')),
     FOREIGN KEY(family_id) REFERENCES families(id),
     FOREIGN KEY(reward_id) REFERENCES rewards(id),
     FOREIGN KEY(requester_member_id) REFERENCES family_members(id)
@@ -107,8 +116,10 @@ export const CORE_SCHEMA_STATEMENTS = [
     reward_request_id TEXT NOT NULL,
     event_type TEXT NOT NULL,
     actor_member_id TEXT NOT NULL,
+    visibility TEXT NOT NULL DEFAULT 'all',
     note TEXT,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    CHECK (visibility IN ('all', 'adults_only')),
     FOREIGN KEY(reward_request_id) REFERENCES reward_requests(id),
     FOREIGN KEY(actor_member_id) REFERENCES family_members(id)
   )`,
@@ -121,6 +132,7 @@ export const CORE_SCHEMA_STATEMENTS = [
     source_type TEXT NOT NULL,
     source_id TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    CHECK (source_type IN ('contribution', 'reward_request')),
     FOREIGN KEY(family_id) REFERENCES families(id),
     FOREIGN KEY(member_id) REFERENCES family_members(id)
   )`,
@@ -145,6 +157,8 @@ export const CORE_SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_refresh_sessions_expires_at ON refresh_sessions(expires_at)`,
   `CREATE INDEX IF NOT EXISTS idx_family_members_family_id ON family_members(family_id)`,
   `CREATE INDEX IF NOT EXISTS idx_points_ledger_family_member ON points_ledger(family_id, member_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_contributions_family_created ON contributions(family_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_reward_requests_family_created ON reward_requests(family_id, created_at)`,
 ]
 
 export const applyCoreSchema = async (db: D1Database): Promise<void> => {

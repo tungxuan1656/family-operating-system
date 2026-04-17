@@ -6,19 +6,19 @@ The MVP database should be small, explicit, and traceable by family scope.
 
 ## Tables
 
-| Table | Purpose | Minimum Fields |
-| --- | --- | --- |
-| `families` | Shared household container | `id`, `name`, `createdBy`, `createdAt` |
-| `familyMembers` | Adult membership and role | `id`, `familyId`, `userId`, `role`, `state`, `createdAt` |
-| `childProfiles` | Managed child records | `id`, `familyId`, `displayName`, `managedByMemberId`, `createdAt` |
-| `contributions` | Contribution aggregate | `id`, `familyId`, `actorMemberId`, `pointType`, `pointValue`, `state`, `description`, `createdAt` |
-| `contributionEvents` | Contribution audit trail | `id`, `contributionId`, `eventType`, `actorMemberId`, `note`, `createdAt` |
-| `rewards` | Reward catalog items | `id`, `familyId`, `title`, `pointType`, `pointCost`, `decisionOwnerMemberId`, `status` |
-| `rewardRequests` | Reward request aggregate | `id`, `familyId`, `rewardId`, `requesterMemberId`, `state`, `createdAt` |
-| `rewardRequestEvents` | Reward request audit trail | `id`, `rewardRequestId`, `eventType`, `actorMemberId`, `note`, `createdAt` |
-| `pointsLedger` | Immutable accounting entries | `id`, `familyId`, `memberId`, `pointType`, `delta`, `sourceType`, `sourceId`, `createdAt` |
-| `pointBalances` | Read-optimized balances | `familyId`, `memberId`, `pointType`, `balance`, `updatedAt` |
-| `userPreferences` | Profile settings | `memberId`, `preferences`, `updatedAt` |
+| Table                 | Purpose                            | Minimum Fields                                                                                    |
+| --------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `families`            | Shared household container         | `id`, `name`, `createdBy`, `createdAt`                                                            |
+| `familyMembers`       | Adult membership and role          | `id`, `familyId`, `userId`, `role`, `state`, `createdAt`                                          |
+| `childProfiles`       | Managed child records              | `id`, `familyId`, `displayName`, `managedByMemberId`, `createdAt`                                 |
+| `contributions`       | Contribution aggregate             | `id`, `familyId`, `actorMemberId`, `pointType`, `pointValue`, `state`, `description`, `createdAt` |
+| `contributionEvents`  | Contribution audit trail           | `id`, `contributionId`, `eventType`, `actorMemberId`, `note`, `createdAt`                         |
+| `rewards`             | Reward catalog items               | `id`, `familyId`, `title`, `pointType`, `pointCost`, `decisionOwnerMemberId`, `status`            |
+| `rewardRequests`      | Reward request aggregate           | `id`, `familyId`, `rewardId`, `requesterMemberId`, `state`, `createdAt`                           |
+| `rewardRequestEvents` | Reward request audit trail         | `id`, `rewardRequestId`, `eventType`, `actorMemberId`, `note`, `createdAt`                        |
+| `pointsLedger`        | Immutable accounting entries       | `id`, `familyId`, `memberId`, `pointType`, `delta`, `sourceType`, `sourceId`, `createdAt`         |
+| `pointBalances`       | Read-optimized balances            | `familyId`, `memberId`, `pointType`, `balance`, `updatedAt`                                       |
+| `userPreferences`     | Membership-scoped profile settings | `memberId`, `preferences`, `updatedAt`                                                            |
 
 ## Invariants
 
@@ -27,6 +27,7 @@ The MVP database should be small, explicit, and traceable by family scope.
 - Balances are derived from ledger behavior, not hand-edited business state.
 - Important state transitions create event rows.
 - Cross-entity references must stay inside the same family scope.
+- `userPreferences` is scoped per family membership (`memberId`), not per global user id.
 
 ## Point Rules
 
@@ -40,3 +41,4 @@ The MVP database should be small, explicit, and traceable by family scope.
 - Prefer append-only event rows for auditable decisions.
 - Avoid destructive deletes for core business history.
 - Keep schema minimal until a clear use case demands more abstraction.
+
