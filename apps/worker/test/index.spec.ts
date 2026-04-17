@@ -6,7 +6,7 @@ import {
 } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { applyCoreSchema } from '../src/db/schema'
+import { applyMigrations } from './helpers/apply-migrations'
 import worker from '../src/index'
 
 const IncomingRequest = Request
@@ -39,7 +39,7 @@ const parseJson = async <T>(response: Response): Promise<T> =>
   response.json() as Promise<T>
 
 beforeEach(async () => {
-  await applyCoreSchema(env.DB)
+  await applyMigrations(env.DB)
 
   for (const statement of clearTableStatements) {
     await env.DB.exec(statement)
